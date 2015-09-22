@@ -1,8 +1,6 @@
 if (document.visibilityState) {
-	var Smartimer;
-
-	(function(st, win){
-		st.setTimeout = function (func, delay) {
+	var Smartimer = (function(win){
+		function StSetTimeout(func, delay) {
 			return win.setTimeout(function(){
 				if (document.visibilityState === "visible") {
 					func();
@@ -10,13 +8,17 @@ if (document.visibilityState) {
 			}, delay)
 		};
 
-		st.setInterval = function (func, delay) {
+		function StSetInterval(func, delay) {
 			return win.setInterval(function(){
 				if (document.visibilityState === "visible") {
 					func();
 				};
 			}, delay)
 		};
-	};)(Smartimer, window)
 
+		return {
+			setTimeout: StSetTimeout,
+			setInterval: StSetInterval,
+		};
+	})(window);
 };
