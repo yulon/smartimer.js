@@ -109,6 +109,12 @@ if (document.visibilityState) {
 				win.setInterval = StSetInterval;
 				win.clearTimeout = StClearTimeout;
 				win.clearInterval = StClearInterval;
+			},
+			unhookNative: function() {
+				win.setTimeout = nwt.stt;
+				win.setInterval = nwt.sil;
+				win.clearTimeout = nwt.ctt;
+				win.clearInterval = nwt.cil;
 			}
 		};
 	})(window);
