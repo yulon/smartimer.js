@@ -1,17 +1,24 @@
 if (document.visibilityState) {
 	var Smartimer = (function(win){
+		var nwt = {
+			stt: win.setTimeout,
+			sil: win.setInterval,
+			ctt: win.clearTimeout,
+			cil: win.clearInterval
+		}
+
 		var ttIds = {};
 		var ilIds = {};
 		var sleepTts = [];
 		var sleepIls = [];
 
 		function StSetTimeout(func, delay) {
-			var id = win.setTimeout(function(){
+			var id = nwt.stt(function(){
 				if (document.visibilityState === "visible") {
 					func();
 					delete ttIds[id];
 				}else{
-					win.clearTimeout(id);
+					nwt.ctt(id);
 					sleepTts.push({
 						i: "st" + id,
 						f: func
@@ -24,11 +31,11 @@ if (document.visibilityState) {
 		};
 
 		function StSetInterval(func, delay) {
-			var id = win.setInterval(function(){
+			var id = nwt.sil(function(){
 				if (document.visibilityState === "visible") {
 					func();
 				}else{
-					win.clearInterval(id);
+					nwt.cil(id);
 					sleepIls.push({
 						i: "st" + id,
 						f: func,
@@ -42,13 +49,21 @@ if (document.visibilityState) {
 		};
 
 		function StClearTimeout (id) {
-			win.clearTimeout(ttIds[id]);
-			delete ttIds[id];
+			if (id.constructor === String) {
+				nwt.ctt(ttIds[id]);
+				delete ttIds[id];
+			}else{
+				nwt.ctt(id);
+			};
 		}
 
 		function StClearInterval (id) {
-			win.clearInterval(ilIds[id]);
-			delete ilIds[id];
+			if (id.constructor === String) {
+				nwt.cil(ilIds[id]);
+				delete ilIds[id];
+			}else{
+				nwt.cil(id);
+			};
 		}
 
 		document.addEventListener("visibilitychange", function() {
@@ -64,11 +79,11 @@ if (document.visibilityState) {
 					if (ilIds[sleepIls[i].i]) {
 						var func = sleepIls[i].f;
 						var delay = sleepIls[i].d;
-						ilIds[sleepIls[i].i] = win.setInterval(function(){
+						ilIds[sleepIls[i].i] = nwt.sil(function(){
 							if (document.visibilityState === "visible") {
 								func();
 							}else{
-								win.clearInterval(id);
+								nwt.cil(id);
 								sleepIls.push({
 									i: "st" + id,
 									f: func,
@@ -89,6 +104,12 @@ if (document.visibilityState) {
 			setInterval: StSetInterval,
 			clearTimeout: StClearTimeout,
 			clearInterval: StClearInterval,
+			hookNative: function() {
+				win.setTimeout = StSetTimeout;
+				win.setInterval = StSetInterval;
+				win.clearTimeout = StClearTimeout;
+				win.clearInterval = StClearInterval;
+			}
 		};
 	})(window);
 };
