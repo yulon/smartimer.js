@@ -12,37 +12,39 @@ if (document.visibilityState) {
 		var sleepTts = [];
 		var sleepIls = [];
 
-		function StSetTimeout(func, delay) {
-			var id = nwt.stt(function(){
+		function run(foc, args) {
+			if (foc.constructor === Function) {
+				foc.apply(window, args);
+			}else{
+				eval(foc);
+			};
+		}
+
+		function cb(foc, sleepList, clear) {
+			return function(){
 				if (document.visibilityState === "visible") {
-					func();
+					run(foc, arguments);
 					delete ttIds[id];
 				}else{
-					nwt.ctt(id);
-					sleepTts.push({
-						i: "st" + id,
-						f: func
-					})
-				};
-			}, delay)
-			var stId = "st" + id;
-			ttIds[stId] = id;
-			return stId;
-		};
-
-		function StSetInterval(func, delay) {
-			var id = nwt.sil(function(){
-				if (document.visibilityState === "visible") {
-					func();
-				}else{
-					nwt.cil(id);
-					sleepIls.push({
+					clear(id);
+					sleepList.push({
 						i: "st" + id,
 						f: func,
 						d: delay
 					})
 				};
-			}, delay)
+			}
+		}
+
+		function StSetTimeout(foc, delay) {
+			var id = nwt.stt(cb(foc, sleepTts, nwt.ctt), delay)
+			var stId = "st" + id;
+			ttIds[stId] = id;
+			return stId;
+		};
+
+		function StSetInterval(foc, delay) {
+			var id = nwt.sil(cb(foc, sleepIls, nwt.cil), delay)
 			var stId = "st" + id;
 			ilIds[stId] = id;
 			return stId;
@@ -70,27 +72,26 @@ if (document.visibilityState) {
 			if (document.visibilityState === "visible") {
 				for (var i = 0; i < sleepTts.length; i++) {
 					if (ttIds[sleepTts[i].i]) {
-						sleepTts[i].f();
+						if (sleepTts[i].d.constructor === Array) {
+							run(sleepTts[i].f, sleepTts[i].d.slice(1, sleepTts[i].d.length));
+						}else{
+							run(sleepTts[i].f, null);
+						};
 						delete ttIds[sleepTts[i].i];
 					};
 				};
 
 				for (var i = 0; i < sleepIls.length; i++) {
 					if (ilIds[sleepIls[i].i]) {
-						var func = sleepIls[i].f;
+						if (sleepIls[i].d.constructor === Array) {
+							run(sleepIls[i].f, sleepIls[i].d.slice(1, sleepIls[i].d.length));
+						}else{
+							run(sleepIls[i].f, null);
+						};
+
+						var foc = sleepIls[i].f;
 						var delay = sleepIls[i].d;
-						ilIds[sleepIls[i].i] = nwt.sil(function(){
-							if (document.visibilityState === "visible") {
-								func();
-							}else{
-								nwt.cil(id);
-								sleepIls.push({
-									i: "st" + id,
-									f: func,
-									d: delay
-								})
-							};
-						}, delay)
+						ilIds[sleepIls[i].i] = nwt.sil(cb(foc, sleepIls, nwt.cil), delay)
 					};
 				};
 
